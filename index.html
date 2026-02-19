@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guess the Word</title>
+<style>
+/*---------------------------------------
+  FONTS
+---------------------------------------*/
+@font-face {
+  font-family: 'Roboto';
+  src: url('roboto/Roboto-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Roboto';
+  src: url('roboto/Roboto-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+}
+
+/* Default font and grid settings */
+:root {
+  --body-font: 'Roboto', sans-serif;
+  --grid-cell-size: clamp(40px, 10vw, 60px);
+  --grid-cell-radius: 12px;
+  --grid-gap: 8px;
+}
+
+/*---------------------------------------
+  BODY & CONTAINERS
+---------------------------------------*/
+body {
+  font-family: var(--body-font);
+  background: url('images/5.jpg') no-repeat center center;
+  background-size: cover;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 0 5vw;
+  margin: 0;
+}
+
+/* Button and theme containers */
+#buttonContainer, #gridThemeContainer {
+  display: flex;
+  flex-wrap: wrap;	
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 1px;
+  align-items: center;
+}
+
+/* Container for mode and theme switches */
+#themeAndModesContainer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/*---------------------------------------
+  TEXT ELEMENTS
+---------------------------------------*/
+#score, #question, #message, #timer {
+  background: #000;
+  padding: 6px 12px;
+  border-radius: 12px;
+  text-align: center;
+  display: inline-block;
+  margin-bottom: 10px;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+}
+
+#score {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+#question {
+  font-size: clamp(1.2rem, 5vw, 2rem);
+  font-weight: 700;
+  text-shadow: none;
+  margin-bottom: 20px;
+}
+
+/*---------------------------------------
+  GAME GRID
+---------------------------------------*/
+#grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--grid-gap);
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.cell {
+  flex: 0 0 auto;
+  width: var(--grid-cell-size);
+  height: var(--grid-cell-size);
+  border-radius: var(--grid-cell-radius);
+  background: rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(16px, 4vw, 24px);
+  font-weight: bold;
+  transition: background 0.3s, transform 0.3s, color 0.3s;
+  color: #fff;
+}
+
+/* Light/Dark theme for cells */
+.cell.light { background: #fff; color: #000; }
+.cell.dark { background: #000; color: #fff; }
+
+.cell:hover { outline: 2px solid #fff; }
+
+/*---------------------------------------
+  INPUT AND BUTTONS
+---------------------------------------*/
+#guessInput {
+  font-size: clamp(12px, 3vw, 14px);
+  padding: 15px 12px;
+  border-radius: 12px;
+  border: none;
+  width: 80%;
+  max-width: 250px;
+  outline: none;
+  box-shadow: 0 0 0 8px #000;
+  margin: 10px 0 20px 0;
+}
+
+#changeBgButton, #playMusicButton {
+  font-family: var(--body-font);
+  font-size: 14px;
+  font-weight: bold;
+  padding: 2px 12px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  background: #000;
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+/*---------------------------------------
+  SWITCH STYLES
+---------------------------------------*/
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 28px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #444;
+  transition: 0.4s;
+  border-radius: 28px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider { background-color: #fff; }
+input:checked + .slider:before { transform: translateX(22px); background-color: #000; }
+
+/*---------------------------------------
+  LANGUAGE AND MODE CONTAINERS
+---------------------------------------*/
+#languageContainer {
+  position: fixed;
+  bottom: 10px;
+  left: 10px;
+  background: #000;
+  padding: 6px 12px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 1000;
+}
+
+.labelBox {
+  background: #000;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-weight: bold;
+  color: #fff;
+}
+
+#languageSelect option { color: #000; }
+
+#modeContainer, #modesContainer { margin-bottom: 20px; }
+
+/* Game mode circles */
+.modeCircle {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: bold;
+  text-align: center;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0);
+  transition: all 0.4s ease;
+  z-index: 1000;
+}
+
+.modeCircle.show {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Toggle order for UI layout */
+#modesToggle { order: -1; }
+#gridThemeContainer { order: 1; }
+
+</style>
+</head>
+<body>
+<!-- Score display -->
+<div id="score">Score: 0</div>
+
+<!-- Buttons -->
+<div id="buttonContainer">
+  <button id="changeBgButton">Change Background</button>
+  <button id="playMusicButton">Play Music</button>
+</div>
+
+<!-- Question and grid -->
+<div id="question"></div>
+<div id="grid"></div>
+
+<!-- Timer and input -->
+<div id="timer" style="display:none"></div>
+<input type="text" id="guessInput" placeholder="Type your word">
+
+<!-- Themes and mode toggles -->
+<div id="themeAndModesContainer">
+  <div id="gridThemeContainer">
+    <span class="labelBox">Light/Dark</span>
+    <label class="switch">
+      <input type="checkbox" id="gridThemeSwitch" checked>
+      <span class="slider round"></span>
+    </label>
+  </div>
+  <span id="modesToggle" class="labelBox" style="cursor: pointer;">Game Modes ⚙️</span>
+</div>
+
+<!-- Game modes -->
+<div class="modeCircle" id="modeJumble">
+  <span>Jumble</span>
+  <label class="switch">
+    <input type="checkbox" id="modeSwitch">
+    <span class="slider"></span>
+  </label>
+</div>
+<div class="modeCircle" id="modeMath">
+  <span>Math</span>
+  <label class="switch">
+    <input type="checkbox" id="mathSwitch">
+    <span class="slider"></span>
+  </label>
+</div>
+<div class="modeCircle" id="modeEnglish">
+  <span>English</span>
+  <label class="switch">
+    <input type="checkbox" id="englishSwitch">
+    <span class="slider round"></span>
+  </label>
+</div>
+
+<!-- Language selection -->
+<div id="languageContainer">
+  <label for="languageSelect">Language:</label>
+  <select id="languageSelect">
+    <option value="en" selected>English</option>
+  </select>
+</div>
+
+<div id="message"></div>
+
+<!-- Audio elements -->
+<audio id="bgMusic" src="background.mp3" loop></audio>
+<audio id="correctSound" src="correct.mp3"></audio>
+<audio id="wrongSound" src="sounds/wrong.mp3"></audio>
+<audio id="letterSound" src="letter.mp3"></audio>
+
+<script>
+//---------------------------------------
+// CONFIGURATION & VARIABLES
+//---------------------------------------
+const config = {
+  revealInterval: 8000,   // interval between revealing letters (ms)
+  nextQuestionDelay: 2000 // time before loading next question (ms)
+};
+
+// Background images list
+const backgrounds = [
+  'images/1.jpg','images/2.jpg','images/3.jpg','images/4.jpg',
+  'images/5.jpg','images/6.jpg','images/7.jpg','images/8.jpg','images/9.jpg'
+];
+
+let currentBgIndex = 0; // current background index
+let questions = [], currentIndex = 0;
+let activeSlotIntervals = new Set();
+let revealIntervalId, timerIntervalId, score = 0;
+let questionFinished = false, guessStartTime;
+let currentQuestion = null;
+let levels = [];
+let levelIndex = 0;
+let currentLanguage = "en"; 
+
+//---------------------------------------
+// DOM ELEMENTS
+//---------------------------------------
+const body = document.body;
+const questionDiv = document.getElementById('question');
+const grid = document.getElementById('grid');
+const message = document.getElementById('message');
+const guessInput = document.getElementById('guessInput');
+const timerDiv = document.getElementById('timer');
+const scoreDiv = document.getElementById('score');
+const changeBgButton = document.getElementById('changeBgButton');
+const playMusicButton = document.getElementById('playMusicButton');
+const gridSwitch = document.getElementById('gridThemeSwitch');
+const modeSwitch = document.getElementById('modeSwitch');
+const mathSwitch = document.getElementById('mathSwitch');
+const englishSwitch = document.getElementById('englishSwitch');
+const languageSelect = document.getElementById('languageSelect');
+
+const bgMusic = document.getElementById('bgMusic');
+const correctSound = document.getElementById('correctSound');
+const wrongSound = document.getElementById('wrongSound');
+
+// Set background music volume
+bgMusic.volume = 0.3;
+
+//---------------------------------------
+// BUTTONS & SWITCHES
+//---------------------------------------
+
+// Change background
+changeBgButton.addEventListener('click', () => {
+  currentBgIndex = (currentBgIndex + 1) % backgrounds.length;
+  body.style.background = `url('${backgrounds[currentBgIndex]}') no-repeat center center fixed`;
+  body.style.backgroundSize = 'cover';
+});
+
+// Play music
+playMusicButton.addEventListener('click', () => bgMusic.play());
+
+// Toggle light/dark theme for cells
+gridSwitch.addEventListener('change', () => {
+  const isLight = gridSwitch.checked;
+  document.querySelectorAll('.cell').forEach(cell => {
+    cell.className = `cell ${isLight ? 'light' : 'dark'}`;
+  });
+});
+
+// Change language
+languageSelect.addEventListener('change', () => {
+  currentLanguage = languageSelect.value;
+  levelIndex = 0;
+  loadLevel();
+});
+
+// Toggle game modes
+modeSwitch.addEventListener('change', () => {
+  if (modeSwitch.checked) {
+    mathSwitch.checked = false;
+    englishSwitch.checked = false;
+  }
+  resetQuestionState();
+});
+
+mathSwitch.addEventListener('change', () => {
+  if (mathSwitch.checked) {
+    modeSwitch.checked = false;
+    englishSwitch.checked = false;
+  }
+  resetQuestionState();
+});
+
+englishSwitch.addEventListener('change', () => {
+  if (englishSwitch.checked) {
+    modeSwitch.checked = false;
+    mathSwitch.checked = false;
+  }
+  resetQuestionState();
+});
+
+//---------------------------------------
+// LEVEL LOADING FUNCTIONS
+//---------------------------------------
+function loadLevel() {
+  // Choose correct JSON files based on mode
+  if (englishSwitch.checked) {
+    levels = ['data/Qe_en.json'];
+    levelIndex = 0; // always start from zero
+  } else if (mathSwitch.checked) {
+    levels = ['data/Math_easy.json','data/Math_medium.json','data/Math_hard.json'];
+  } else {
+    levels = [
+      `data/Qe_${currentLanguage}.json`,
+      `data/Qm_${currentLanguage}.json`,
+      `data/Qh_${currentLanguage}.json`
+    ];
+  }
+
+  // Load questions from JSON
+  fetch(levels[levelIndex] + "?t=" + Date.now()) // cache buster
+    .then(res => res.json())
+    .then(data => {
+      questions = shuffle(data); // shuffle questions
+      currentIndex = 0;
+      loadQuestion();
+    })
+    .catch(err => console.error("Error loading questions:", err));
+}
+
+//---------------------------------------
+// HELPER FUNCTIONS
+//---------------------------------------
+
+// Shuffle an array randomly
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+// Generate random letters for reveal effect
+function generateRandomLetters(steps) {
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  return Array.from({ length: steps }, () => letters[Math.floor(Math.random() * letters.length)]);
+}
+
+// Jumble a word
+function jumbleWord(word) {
+  const arr = word.split('');
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr.join('');
+}
+
+// Calculate points based on time and revealed letters
+function calculatePoints(elapsed, revealedCount) {
+  let points = Math.max(5, Math.floor(config.revealInterval / 1000 * 10 - elapsed * 2));
+  if (revealedCount === 0) points += 5;
+  return points;
+}
+
+// Reset question state
+function resetQuestionState() {
+  currentQuestion = null;
+  levelIndex = 0;
+  questionFinished = false;
+  loadLevel();
+}
+
+//---------------------------------------
+// GAME LOGIC FUNCTIONS
+//---------------------------------------
+
+// Start timer for letter reveal
+function startTimer() {
+  clearInterval(timerIntervalId);
+  let remaining = config.revealInterval / 1000;
+  timerDiv.textContent = `Time until next letter: ${remaining}s`;
+  guessStartTime = Date.now();
+
+  timerIntervalId = setInterval(() => {
+    remaining--;
+    if (remaining <= 0) clearInterval(timerIntervalId);
+    else timerDiv.textContent = `Time until next letter: ${remaining}s`;
+  }, 1000);
+}
+
+// Reveal a letter in a cell
+function revealLetterSlot(cell, correctLetter) {
+  if (cell.dataset.revealing === "true" || questionFinished) return;
+  cell.dataset.revealing = "true";
+
+  const intervalTime = 150;
+  const steps = Math.floor(config.revealInterval / intervalTime);
+  const randomSequence = generateRandomLetters(steps);
+  let currentStep = 0;
+
+  const interval = setInterval(() => {
+    if (currentStep < randomSequence.length) {
+      cell.textContent = randomSequence[currentStep];
+      currentStep++;
+    } else {
+      clearInterval(interval);
+      activeSlotIntervals.delete(interval);
+      cell.textContent = correctLetter;
+      cell.dataset.revealing = "false";
+    }
+  }, intervalTime);
+
+  activeSlotIntervals.add(interval);
+}
+
+// Load current question
+function loadQuestion() {
+  questionFinished = false;
+  clearInterval(revealIntervalId);
+  clearInterval(timerIntervalId);
+  activeSlotIntervals.forEach(id => clearInterval(id));
+  activeSlotIntervals.clear();
+  message.textContent = '';
+  guessInput.value = '';
+
+  const current = currentQuestion ?? questions[currentIndex++];
+  currentQuestion = current;
+
+  if (!current) {
+    if (!englishSwitch.checked) {
+      levelIndex++;
+      if (levelIndex < levels.length) loadLevel();
+      else {
+        message.textContent = "🎉 You completed all difficulty levels!";
+        questionDiv.textContent = '';
+      }
+    } else {
+      message.textContent = "🎉 You completed all English questions!";
+      questionDiv.textContent = '';
+    }
+    return;
+  }
+
+  const answer = current.a.toUpperCase();
+  const isJumble = modeSwitch.checked;
+
+  // Set question based on mode
+  if (englishSwitch.checked) {
+    questionDiv.textContent = current.q;
+    message.textContent = "";
+  } else if (mathSwitch.checked) {
+    questionDiv.textContent = `Calculate: ${current.q}`;
+    message.textContent = "";
+  } else {
+    questionDiv.textContent = isJumble
+      ? jumbleWord(answer)
+      : `${current.q} — ${answer.length} letters`;
+    message.textContent = isJumble ? "💡 Guess the word from jumbled letters!" : "";
+  }
+
+  // Create grid
+  grid.innerHTML = '';
+  const cells = [];
+  for (let i = 0; i < answer.length; i++) {
+    const div = document.createElement('div');
+    div.className = `cell ${gridSwitch.checked ? 'light' : 'dark'}`;
+    grid.appendChild(div);
+    cells.push(div);
+  }
+
+  // Reveal random letters
+  let revealedIndexes = [];
+  function revealRandomLetter() {
+    if (questionFinished) return;
+
+    if (revealedIndexes.length === answer.length) {
+      questionFinished = true;
+      clearInterval(revealIntervalId);
+      clearInterval(timerIntervalId);
+      activeSlotIntervals.forEach(id => clearInterval(id));
+      activeSlotIntervals.clear();
+
+      message.textContent = `You didn't guess! Correct word was: ${answer}`;
+      wrongSound.currentTime = 0;
+      wrongSound.play();
+      cells.forEach((cell, i) => cell.textContent = answer[i]);
+      currentQuestion = null;
+      setTimeout(loadQuestion, config.nextQuestionDelay);
+      return;
+    }
+
+    let idx;
+    do { idx = Math.floor(Math.random() * answer.length); } 
+    while (revealedIndexes.includes(idx));
+
+    revealedIndexes.push(idx);
+    revealLetterSlot(cells[idx], answer[idx]);
+    startTimer();
+  }
+
+  revealIntervalId = setInterval(revealRandomLetter, config.revealInterval);
+  startTimer();
+
+  // Check guess
+  guessInput.oninput = () => {
+    const guess = guessInput.value.toUpperCase();
+    if (guess === answer && !questionFinished) {
+      questionFinished = true;
+      activeSlotIntervals.forEach(id => clearInterval(id));
+      activeSlotIntervals.clear();
+
+      const elapsed = (Date.now() - guessStartTime) / 1000;
+      const points = calculatePoints(elapsed, revealedIndexes.length);
+
+      score += points;
+      scoreDiv.textContent = `Score: ${score}`;
+      scoreDiv.style.transform = 'scale(1.3)';
+      setTimeout(() => scoreDiv.style.transform = 'scale(1)', 300);
+
+      message.textContent = `Correct! 🎉 +${points} points`;
+      correctSound.currentTime = 0;
+      correctSound.play();
+
+      clearInterval(revealIntervalId);
+      clearInterval(timerIntervalId);
+      cells.forEach((cell, i) => cell.textContent = answer[i]);
+      timerDiv.textContent = '';
+
+      setTimeout(() => {
+        currentQuestion = null;
+        loadQuestion();
+      }, config.nextQuestionDelay);
+    }
+  };
+}
+
+//---------------------------------------
+// GAME MODES (CIRCLES)
+//---------------------------------------
+const modesToggle = document.getElementById('modesToggle');
+const modeCircles = document.querySelectorAll('.modeCircle');
+
+// Preset circle positions
+const circlePositions = [
+  { x: window.innerWidth * 0.63, y: window.innerHeight * 0.89 },
+  { x: window.innerWidth * 0.48, y: window.innerHeight * 0.89 },
+  { x: window.innerWidth * 0.33, y: window.innerHeight * 0.89 },
+];
+
+// Toggle display of mode circles
+modesToggle.addEventListener('click', () => {
+  const isVisible = modeCircles[0].classList.contains('show');
+  if (isVisible) {
+    modeCircles.forEach(circle => circle.classList.remove('show'));
+  } else {
+    modeCircles.forEach((circle, i) => {
+      if (circlePositions[i]) {
+        circle.style.left = circlePositions[i].x + 'px';
+        circle.style.top = circlePositions[i].y + 'px';
+      }
+      circle.classList.add('show');
+    });
+  }
+});
+
+//---------------------------------------
+// INITIAL LEVEL LOAD
+//---------------------------------------
+languageSelect.value = currentLanguage;
+loadLevel();
+</script>
