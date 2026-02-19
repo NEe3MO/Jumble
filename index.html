@@ -10,14 +10,14 @@
 ---------------------------------------*/
 @font-face {
   font-family: 'Roboto';
-  src: url('roboto/Roboto-Regular.woff2') format('woff2');
+  src: url('Roboto/static/Roboto-Regular.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
 }
 
 @font-face {
   font-family: 'Roboto';
-  src: url('roboto/Roboto-Bold.woff2') format('woff2');
+  src: url('Roboto/static/Roboto-Bold.ttf') format('truetype');
   font-weight: 700;
   font-style: normal;
 }
@@ -192,20 +192,8 @@ input:checked + .slider { background-color: #fff; }
 input:checked + .slider:before { transform: translateX(22px); background-color: #000; }
 
 /*---------------------------------------
-  LANGUAGE AND MODE CONTAINERS
+  MODE CONTAINERS
 ---------------------------------------*/
-#languageContainer {
-  position: fixed;
-  bottom: 10px;
-  left: 10px;
-  background: #000;
-  padding: 6px 12px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  z-index: 1000;
-}
 
 .labelBox {
   background: #000;
@@ -215,39 +203,91 @@ input:checked + .slider:before { transform: translateX(22px); background-color: 
   color: #fff;
 }
 
-#languageSelect option { color: #000; }
-
 #modeContainer, #modesContainer { margin-bottom: 20px; }
 
-/* Game mode circles */
-.modeCircle {
-  position: absolute;
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  background: rgba(0,0,0,0.8);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-weight: bold;
-  text-align: center;
-  cursor: pointer;
-  opacity: 0;
-  transform: scale(0);
-  transition: all 0.4s ease;
-  z-index: 1000;
+/* Modern game mode panel */
+#modesWrapper {
+  position: relative;
 }
 
-.modeCircle.show {
+#modesToggle {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  font-family: var(--body-font);
+}
+
+#modesPanel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: min(320px, 84vw);
+  padding: 10px;
+  border-radius: 14px;
+  background: rgba(15, 15, 15, 0.9);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  transform: translateY(-8px) scale(0.98);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 1100;
+}
+
+#modesPanel.open {
   opacity: 1;
-  transform: scale(1);
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.modeItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+
+.modeItem:last-child {
+  margin-bottom: 0;
+}
+
+.modeMeta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.modeTitle {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.modeHint {
+  font-size: 12px;
+  opacity: 0.75;
 }
 
 /* Toggle order for UI layout */
 #modesToggle { order: -1; }
 #gridThemeContainer { order: 1; }
+
+@media (max-width: 768px) {
+  #modesPanel {
+    right: auto;
+    left: 50%;
+    transform: translate(-50%, -8px) scale(0.98);
+  }
+
+  #modesPanel.open {
+    transform: translate(-50%, 0) scale(1);
+  }
+}
 
 </style>
 </head>
@@ -278,38 +318,31 @@ input:checked + .slider:before { transform: translateX(22px); background-color: 
       <span class="slider round"></span>
     </label>
   </div>
-  <span id="modesToggle" class="labelBox" style="cursor: pointer;">Game Modes ⚙️</span>
-</div>
-
-<!-- Game modes -->
-<div class="modeCircle" id="modeJumble">
-  <span>Jumble</span>
-  <label class="switch">
-    <input type="checkbox" id="modeSwitch">
-    <span class="slider"></span>
-  </label>
-</div>
-<div class="modeCircle" id="modeMath">
-  <span>Math</span>
-  <label class="switch">
-    <input type="checkbox" id="mathSwitch">
-    <span class="slider"></span>
-  </label>
-</div>
-<div class="modeCircle" id="modeEnglish">
-  <span>English</span>
-  <label class="switch">
-    <input type="checkbox" id="englishSwitch">
-    <span class="slider round"></span>
-  </label>
-</div>
-
-<!-- Language selection -->
-<div id="languageContainer">
-  <label for="languageSelect">Language:</label>
-  <select id="languageSelect">
-    <option value="en" selected>English</option>
-  </select>
+  <div id="modesWrapper">
+    <button id="modesToggle" class="labelBox" type="button">Game Modes ⚙️</button>
+    <div id="modesPanel" aria-hidden="true">
+      <div class="modeItem">
+        <div class="modeMeta">
+          <span class="modeTitle">Jumble</span>
+          <span class="modeHint">Guess from shuffled letters</span>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="modeSwitch">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="modeItem">
+        <div class="modeMeta">
+          <span class="modeTitle">Math</span>
+          <span class="modeHint">Solve timed math questions</span>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="mathSwitch">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div id="message"></div>
@@ -317,8 +350,7 @@ input:checked + .slider:before { transform: translateX(22px); background-color: 
 <!-- Audio elements -->
 <audio id="bgMusic" src="background.mp3" loop></audio>
 <audio id="correctSound" src="correct.mp3"></audio>
-<audio id="wrongSound" src="sounds/wrong.mp3"></audio>
-<audio id="letterSound" src="letter.mp3"></audio>
+<audio id="wrongSound" src="correct.mp3"></audio>
 
 <script>
 //---------------------------------------
@@ -339,11 +371,12 @@ let currentBgIndex = 0; // current background index
 let questions = [], currentIndex = 0;
 let activeSlotIntervals = new Set();
 let revealIntervalId, timerIntervalId, score = 0;
-let questionFinished = false, guessStartTime;
+let questionFinished = false;
 let currentQuestion = null;
 let levels = [];
 let levelIndex = 0;
-let currentLanguage = "en"; 
+let questionStartTime = 0;
+let comboStreak = 0;
 
 //---------------------------------------
 // DOM ELEMENTS
@@ -360,8 +393,6 @@ const playMusicButton = document.getElementById('playMusicButton');
 const gridSwitch = document.getElementById('gridThemeSwitch');
 const modeSwitch = document.getElementById('modeSwitch');
 const mathSwitch = document.getElementById('mathSwitch');
-const englishSwitch = document.getElementById('englishSwitch');
-const languageSelect = document.getElementById('languageSelect');
 
 const bgMusic = document.getElementById('bgMusic');
 const correctSound = document.getElementById('correctSound');
@@ -392,18 +423,10 @@ gridSwitch.addEventListener('change', () => {
   });
 });
 
-// Change language
-languageSelect.addEventListener('change', () => {
-  currentLanguage = languageSelect.value;
-  levelIndex = 0;
-  loadLevel();
-});
-
 // Toggle game modes
 modeSwitch.addEventListener('change', () => {
   if (modeSwitch.checked) {
     mathSwitch.checked = false;
-    englishSwitch.checked = false;
   }
   resetQuestionState();
 });
@@ -411,15 +434,6 @@ modeSwitch.addEventListener('change', () => {
 mathSwitch.addEventListener('change', () => {
   if (mathSwitch.checked) {
     modeSwitch.checked = false;
-    englishSwitch.checked = false;
-  }
-  resetQuestionState();
-});
-
-englishSwitch.addEventListener('change', () => {
-  if (englishSwitch.checked) {
-    modeSwitch.checked = false;
-    mathSwitch.checked = false;
   }
   resetQuestionState();
 });
@@ -429,16 +443,13 @@ englishSwitch.addEventListener('change', () => {
 //---------------------------------------
 function loadLevel() {
   // Choose correct JSON files based on mode
-  if (englishSwitch.checked) {
-    levels = ['data/Qe_en.json'];
-    levelIndex = 0; // always start from zero
-  } else if (mathSwitch.checked) {
+  if (mathSwitch.checked) {
     levels = ['data/Math_easy.json','data/Math_medium.json','data/Math_hard.json'];
   } else {
     levels = [
-      `data/Qe_${currentLanguage}.json`,
-      `data/Qm_${currentLanguage}.json`,
-      `data/Qh_${currentLanguage}.json`
+      'data/Qe_en.json',
+      'data/Qm_en.json',
+      'data/Qh_en.json'
     ];
   }
 
@@ -482,11 +493,23 @@ function jumbleWord(word) {
   return arr.join('');
 }
 
-// Calculate points based on time and revealed letters
+function getDifficultyMultiplier() {
+  if (levelIndex === 0) return 1.0;
+  if (levelIndex === 1) return 1.25;
+  return 1.5;
+}
+
+// Calculate points based on speed, difficulty, reveals and streak
 function calculatePoints(elapsed, revealedCount) {
-  let points = Math.max(5, Math.floor(config.revealInterval / 1000 * 10 - elapsed * 2));
-  if (revealedCount === 0) points += 5;
-  return points;
+  const difficultyMultiplier = getDifficultyMultiplier();
+  const modeBase = mathSwitch.checked ? 16 : 12;
+  const speedBonus = Math.max(0, 12 - Math.floor(elapsed));
+  const revealPenalty = revealedCount * 2;
+  const perfectBonus = revealedCount === 0 ? 8 : 0;
+  const comboBonus = Math.min(comboStreak * 2, 20);
+
+  const rawPoints = modeBase + speedBonus + perfectBonus + comboBonus - revealPenalty;
+  return Math.max(5, Math.round(rawPoints * difficultyMultiplier));
 }
 
 // Reset question state
@@ -494,6 +517,7 @@ function resetQuestionState() {
   currentQuestion = null;
   levelIndex = 0;
   questionFinished = false;
+  comboStreak = 0;
   loadLevel();
 }
 
@@ -506,7 +530,6 @@ function startTimer() {
   clearInterval(timerIntervalId);
   let remaining = config.revealInterval / 1000;
   timerDiv.textContent = `Time until next letter: ${remaining}s`;
-  guessStartTime = Date.now();
 
   timerIntervalId = setInterval(() => {
     remaining--;
@@ -552,17 +575,13 @@ function loadQuestion() {
 
   const current = currentQuestion ?? questions[currentIndex++];
   currentQuestion = current;
+  questionStartTime = Date.now();
 
   if (!current) {
-    if (!englishSwitch.checked) {
-      levelIndex++;
-      if (levelIndex < levels.length) loadLevel();
-      else {
-        message.textContent = "🎉 You completed all difficulty levels!";
-        questionDiv.textContent = '';
-      }
-    } else {
-      message.textContent = "🎉 You completed all English questions!";
+    levelIndex++;
+    if (levelIndex < levels.length) loadLevel();
+    else {
+      message.textContent = "🎉 You completed all difficulty levels!";
       questionDiv.textContent = '';
     }
     return;
@@ -572,10 +591,7 @@ function loadQuestion() {
   const isJumble = modeSwitch.checked;
 
   // Set question based on mode
-  if (englishSwitch.checked) {
-    questionDiv.textContent = current.q;
-    message.textContent = "";
-  } else if (mathSwitch.checked) {
+  if (mathSwitch.checked) {
     questionDiv.textContent = `Calculate: ${current.q}`;
     message.textContent = "";
   } else {
@@ -602,6 +618,7 @@ function loadQuestion() {
 
     if (revealedIndexes.length === answer.length) {
       questionFinished = true;
+      comboStreak = 0;
       clearInterval(revealIntervalId);
       clearInterval(timerIntervalId);
       activeSlotIntervals.forEach(id => clearInterval(id));
@@ -636,15 +653,17 @@ function loadQuestion() {
       activeSlotIntervals.forEach(id => clearInterval(id));
       activeSlotIntervals.clear();
 
-      const elapsed = (Date.now() - guessStartTime) / 1000;
+      const elapsed = (Date.now() - questionStartTime) / 1000;
       const points = calculatePoints(elapsed, revealedIndexes.length);
+      comboStreak++;
+      const streakText = comboStreak > 1 ? ` | Combo x${comboStreak}` : "";
 
       score += points;
       scoreDiv.textContent = `Score: ${score}`;
       scoreDiv.style.transform = 'scale(1.3)';
       setTimeout(() => scoreDiv.style.transform = 'scale(1)', 300);
 
-      message.textContent = `Correct! 🎉 +${points} points`;
+      message.textContent = `Correct! 🎉 +${points} points${streakText}`;
       correctSound.currentTime = 0;
       correctSound.play();
 
@@ -662,37 +681,33 @@ function loadQuestion() {
 }
 
 //---------------------------------------
-// GAME MODES (CIRCLES)
+// GAME MODES PANEL
 //---------------------------------------
 const modesToggle = document.getElementById('modesToggle');
-const modeCircles = document.querySelectorAll('.modeCircle');
+const modesPanel = document.getElementById('modesPanel');
+const modesWrapper = document.getElementById('modesWrapper');
 
-// Preset circle positions
-const circlePositions = [
-  { x: window.innerWidth * 0.63, y: window.innerHeight * 0.89 },
-  { x: window.innerWidth * 0.48, y: window.innerHeight * 0.89 },
-  { x: window.innerWidth * 0.33, y: window.innerHeight * 0.89 },
-];
-
-// Toggle display of mode circles
 modesToggle.addEventListener('click', () => {
-  const isVisible = modeCircles[0].classList.contains('show');
-  if (isVisible) {
-    modeCircles.forEach(circle => circle.classList.remove('show'));
-  } else {
-    modeCircles.forEach((circle, i) => {
-      if (circlePositions[i]) {
-        circle.style.left = circlePositions[i].x + 'px';
-        circle.style.top = circlePositions[i].y + 'px';
-      }
-      circle.classList.add('show');
-    });
+  const isOpen = modesPanel.classList.toggle('open');
+  modesPanel.setAttribute('aria-hidden', String(!isOpen));
+});
+
+document.addEventListener('click', (event) => {
+  if (!modesWrapper.contains(event.target)) {
+    modesPanel.classList.remove('open');
+    modesPanel.setAttribute('aria-hidden', 'true');
+  }
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    modesPanel.classList.remove('open');
+    modesPanel.setAttribute('aria-hidden', 'true');
   }
 });
 
 //---------------------------------------
 // INITIAL LEVEL LOAD
 //---------------------------------------
-languageSelect.value = currentLanguage;
 loadLevel();
 </script>

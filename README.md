@@ -18,3 +18,14 @@ A simple web game for guessing words and solving math questions.
 ## GitHub
 
 The project is ready to be uploaded to a GitHub repository.
+
+## Support Development
+
+If you enjoy using EROS VAULT and want to help keep the project going,
+you are welcome to support development with a small crypto contribution.
+
+- Bitcoin (BTC): `bc1qfg0w2ujx743k8nrgxux09dt8rpgcketh0h4ryv`
+- Ethereum (ETH): `0x128460f95956c755d09695ab5c5d46262f8b2ae6`
+- Solana (SOL): `J7GyhqPCuotpw43qLwT832455mJrWgKcAGfh4i8TN2vc`
+
+Every contribution is appreciated, but absolutely optional. Your support helps maintain and improve the vault. Thank you!
