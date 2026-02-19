@@ -2,6 +2,10 @@
 
 A simple web game for guessing words and solving math questions.
 
+## Preview
+
+![Project preview](preview.png)
+
 ## Run Locally
 
 1. Open `index.html` in your browser.
