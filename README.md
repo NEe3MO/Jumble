@@ -2,6 +2,11 @@
 
 A simple web game for guessing words and solving math questions.
 
+# Guess the Word
+
+  ## Live Demo
+  Play here: https://nee3mo.github.io/Jumble/
+
 ## Preview
 
 ![Project preview](preview.png)
